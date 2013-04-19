@@ -86,8 +86,9 @@ module MultiFetchFragments
       if advanced_spacer_opts
         interval = advanced_spacer_opts[:interval] || 3
         block = advanced_spacer_opts[:spacer]
+        output = []
         if block
-          results =
+          output = []
             results.in_groups(interval).collect {|content| block.call(content)}
         end
       end
