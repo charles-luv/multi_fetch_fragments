@@ -84,17 +84,11 @@ module MultiFetchFragments
       #-------------------------------------- Begin Custom Code.
       # NOTE(Charles): This is where I just wrap the spacer.
       if advanced_spacer_opts
-        output = []
-        spacer_interval = advanced_spacer_opts[:interval] || 3
-        spacer_open_tag = advanced_spacer_opts[:open_tag] ||
-                "<div class = 'rect-wrapper'>"
-        spacer_close_tag = advanced_spacer_opts[:close_tag] || '</div>'
-        results.each_slice(spacer_interval) do |content|
-          output << spacer_open_tag
-          output << content
-          output << spacer_close_tag
+        interval = advanced_spacer_opts[:interval] || 3
+        block = advanced_spacer_opts[:spacer]
+        if block
+          results.each_slice(interval).collect! {|content| block.call(content)}
         end
-        results = output
       end
       #-------------------------------------- End Custom Code.
 
