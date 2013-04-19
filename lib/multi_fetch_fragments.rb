@@ -10,6 +10,17 @@ module MultiFetchFragments
 
       return nil if @collection.blank?
 
+      #-------------------------------------- Begin Custom Code.
+      # NOTE(charles): This is my option that I added.
+      # Initialize it up here as this instance variable seem to be overwritten
+      # by nested calls to render (i.e. any partial this partial renders).
+      # This may some day lead to a weird bug when you russian-doll cache
+      # a collection within a collection with differing advanced_spacer_options?
+
+      advanced_spacer_opts ||= @options[:advanced_spacer]
+
+      #-------------------------------------- End Custom Code.
+
       if @options.key?(:spacer_template)
         spacer = find_template(@options[:spacer_template]).render(@view, @locals)
       end
@@ -17,7 +28,6 @@ module MultiFetchFragments
       results = []
 
       if cache_collection?
-
         additional_cache_options = @options.fetch(:cache_options, {})
         keys_to_collection_map = {}
 
@@ -63,7 +73,6 @@ module MultiFetchFragments
           else
             non_cached_result = non_cached_results.shift
             Rails.cache.write(key, non_cached_result, additional_cache_options)
-
             results << non_cached_result
           end
         end
@@ -71,6 +80,23 @@ module MultiFetchFragments
       else
         results = @template ? collection_with_template : collection_without_template
       end
+
+      #-------------------------------------- Begin Custom Code.
+      # NOTE(Charles): This is where I just wrap the spacer.
+      if advanced_spacer_opts
+        output = []
+        spacer_interval = advanced_spacer_opts[:interval] || 3
+        spacer_open_tag = advanced_spacer_opts[:open_tag] ||
+                "<div class = 'rect-wrapper'>"
+        spacer_close_tag = advanced_spacer_opts[:close_tag] || '</div>'
+        results.each_slice(spacer_interval) do |content|
+          output << spacer_open_tag
+          output << content
+          output << spacer_close_tag
+        end
+        results = output
+      end
+      #-------------------------------------- End Custom Code.
 
       results.join(spacer).html_safe
     end
