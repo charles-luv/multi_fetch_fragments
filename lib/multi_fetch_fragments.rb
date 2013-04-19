@@ -88,9 +88,11 @@ module MultiFetchFragments
         block = advanced_spacer_opts[:spacer]
         output = []
         if block
-          output = []
-            results.in_groups(interval).collect {|content| block.call(content)}
+          results.each_slice(interval) do |content|
+            output << block.call(content.join)
+          end
         end
+        results = output
       end
       #-------------------------------------- End Custom Code.
 
